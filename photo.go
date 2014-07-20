@@ -1,4 +1,4 @@
-package media
+package main
 
 import (
 	"bufio"
@@ -19,7 +19,7 @@ const DateFormat = "2006:01:02 15:04:05-07:00"
 
 var ValidExts = []string{".jpg", ".png", ".tiff", ".avi"}
 
-type Media struct {
+type Photo struct {
 	Id               int64
 	Name             string
 	Path             string
@@ -29,14 +29,14 @@ type Media struct {
 	Md5hash          string
 }
 
-func (p *Media) SortedPath(root string) string {
+func (p *Photo) SortedPath(root string) string {
 	year, month, day := p.ModificationTime.Date()
 	path, err := filepath.Abs(fmt.Sprintf("%s/%d/%d/%d/%s", root, year, month, day, p.Name))
 	checkError(err, "Invalid path")
 	return path
 }
 
-func (p *Media) MoveToDestination(destination string) {
+func (p *Photo) MoveToDestination(destination string) {
 	newPath := p.SortedPath(destination)
 	err := os.MkdirAll(filepath.Dir(newPath), 0775)
 	checkError(err, "Unable to make folder: "+newPath)
@@ -45,18 +45,18 @@ func (p *Media) MoveToDestination(destination string) {
 	p.Path = newPath
 }
 
-func (media *Media) RefreshAttributes() {
+func (photo *Photo) RefreshAttributes() {
 	var err error
-	path := media.Path
+	path := photo.Path
 	data := exif.Load(path)
-	media.Name = filepath.Base(path)
-	media.Height, err = strconv.Atoi(data.Get("ImageHeight"))
+	photo.Name = filepath.Base(path)
+	photo.Height, err = strconv.Atoi(data.Get("ImageHeight"))
 	checkError(err, "Invalid image height: "+path)
-	media.Width, err = strconv.Atoi(data.Get("ImageWidth"))
+	photo.Width, err = strconv.Atoi(data.Get("ImageWidth"))
 	checkError(err, "Invalid image width: "+path)
-	media.ModificationTime, err = time.Parse(DateFormat, data.Get("FileModifyDate"))
+	photo.ModificationTime, err = time.Parse(DateFormat, data.Get("FileModifyDate"))
 	checkError(err, "Invalid image date: "+path)
-	media.Md5hash = Md5OfFile(path)
+	photo.Md5hash = Md5OfFile(path)
 }
 
 func checkError(err error, message string) {
@@ -65,7 +65,7 @@ func checkError(err error, message string) {
 	}
 }
 
-func IsValidMedia(path string) bool {
+func IsValidPhoto(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	for _, b := range ValidExts {
 		if b == ext {
