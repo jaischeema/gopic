@@ -12,8 +12,8 @@ import (
 var db = setupDatabase()
 
 func FindOrCreateMedia(path string) Media {
-	var media media
-	db.Where(media{Path: path}).FirstOrInit(&media)
+	var media Media
+	db.Where(Media{Path: path}).FirstOrInit(&media)
 	if db.NewRecord(media) {
 		media.RefreshAttributes()
 		db.Save(&media)
@@ -29,7 +29,7 @@ func setupDatabase() gorm.DB {
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
 	db.SingularTable(true)
-	db.AutoMigrate(media{})
+	db.AutoMigrate(Media{})
 	db.LogMode(true)
 	// db.Model(media{}).AddUniqueIndex("idx_media_path", "path")
 	// db.Model(media{}).AddUniqueIndex("idx_media_hash", "md5hash")
@@ -46,7 +46,7 @@ func SortMedia(sourceFolder string, destinationFolder string, moveFiles bool, st
 	walkFunction := func(path string, info os.FileInfo, err error) error {
 		checkError(err, "Unable to transverse source")
 		if !info.IsDir() {
-			if IsValidmedia(path) {
+			if IsValidMedia(path) {
 				path, err := filepath.Abs(path)
 				checkError(err, "Invalid file path")
 				pic := FindOrCreateMedia(path)
@@ -62,5 +62,5 @@ func SortMedia(sourceFolder string, destinationFolder string, moveFiles bool, st
 }
 
 func main() {
-	SortMedia("./sorted-again", "./sorted", false, false, false, false)
+	SortMedia("/source", "./public/system/originals", false, false, false, false)
 }
