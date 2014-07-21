@@ -16,7 +16,7 @@ func FindOrCreatePhoto(db *gorm.DB, path string) Photo {
 	return media
 }
 
-func SortMedia(db *gorm.DB, sourceFolder string, destinationFolder string, moveFiles bool, storeInDB bool, findDuplicated bool, generateThumbnails bool) {
+func RebuildIndex(db *gorm.DB, sourceFolder string, destinationFolder string, moveFiles bool, generateThumbnails bool) {
 	walkFunction := func(path string, info os.FileInfo, err error) error {
 		CheckError(err, "Unable to transverse source")
 		if !info.IsDir() {

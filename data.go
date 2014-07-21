@@ -18,3 +18,9 @@ func SetupDatabase() *gorm.DB {
 	// db.Model(media{}).AddUniqueIndex("idx_media_hash", "md5hash")
 	return &db
 }
+
+func LoadPhotos(db *gorm.DB, start int, length int) []Photo {
+	var photos []Photo
+	db.Offset(start).Limit(length).Find(&photos)
+	return photos
+}

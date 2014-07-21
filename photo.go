@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/hawx/img/exif"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -32,16 +31,16 @@ type Photo struct {
 func (p *Photo) SortedPath(root string) string {
 	year, month, day := p.ModificationTime.Date()
 	path, err := filepath.Abs(fmt.Sprintf("%s/%d/%d/%d/%s", root, year, month, day, p.Name))
-	checkError(err, "Invalid path")
+	CheckError(err, "Invalid path")
 	return path
 }
 
 func (p *Photo) MoveToDestination(destination string) {
 	newPath := p.SortedPath(destination)
 	err := os.MkdirAll(filepath.Dir(newPath), 0775)
-	checkError(err, "Unable to make folder: "+newPath)
+	CheckError(err, "Unable to make folder: "+newPath)
 	err = os.Rename(p.Path, newPath)
-	checkError(err, "Unable to move file: "+p.Path)
+	CheckError(err, "Unable to move file: "+p.Path)
 	p.Path = newPath
 }
 
@@ -51,18 +50,12 @@ func (photo *Photo) RefreshAttributes() {
 	data := exif.Load(path)
 	photo.Name = filepath.Base(path)
 	photo.Height, err = strconv.Atoi(data.Get("ImageHeight"))
-	checkError(err, "Invalid image height: "+path)
+	CheckError(err, "Invalid image height: "+path)
 	photo.Width, err = strconv.Atoi(data.Get("ImageWidth"))
-	checkError(err, "Invalid image width: "+path)
+	CheckError(err, "Invalid image width: "+path)
 	photo.ModificationTime, err = time.Parse(DateFormat, data.Get("FileModifyDate"))
-	checkError(err, "Invalid image date: "+path)
+	CheckError(err, "Invalid image date: "+path)
 	photo.Md5hash = Md5OfFile(path)
-}
-
-func checkError(err error, message string) {
-	if err != nil {
-		log.Fatalf("Error : %v", message)
-	}
 }
 
 func IsValidPhoto(path string) bool {
