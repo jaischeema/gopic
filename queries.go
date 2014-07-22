@@ -6,6 +6,12 @@ import (
 	"path/filepath"
 )
 
+func LoadPhotos(db *gorm.DB, start int, length int) []Photo {
+	var photos []Photo
+	db.Offset(start).Limit(length).Find(&photos)
+	return photos
+}
+
 func FindOrCreatePhoto(db *gorm.DB, path string) Photo {
 	var media Photo
 	db.Where(Photo{Path: path}).FirstOrInit(&media)

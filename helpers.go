@@ -1,9 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func CheckError(err error, message string) {
+	if err != nil {
+		panic(fmt.Sprintf("Error : %v", message))
+	}
+}
 
 func SetupDatabase() *gorm.DB {
 	db, err := gorm.Open("sqlite3", "/tmp/gorm.db")
@@ -17,10 +24,4 @@ func SetupDatabase() *gorm.DB {
 	// db.Model(media{}).AddUniqueIndex("idx_media_path", "path")
 	// db.Model(media{}).AddUniqueIndex("idx_media_hash", "md5hash")
 	return &db
-}
-
-func LoadPhotos(db *gorm.DB, start int, length int) []Photo {
-	var photos []Photo
-	db.Offset(start).Limit(length).Find(&photos)
-	return photos
 }

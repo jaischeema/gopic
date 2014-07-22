@@ -1,37 +1,26 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"os"
 )
 
 var db = SetupDatabase()
-var runningIndex bool = false
 
 func main() {
+
 	r := gin.Default()
 
-	r.GET("/pictures", func(c *gin.Context) {
-		photos := LoadPhotos(db, 0, 10)
-		c.JSON(200, gin.H{"photos": photos, "status": 200})
-	})
+	v1 := r.Group("/api")
+	{
+		v1.GET("/photos", PageParam(), PhotosHandler)
+		v1.GET("/photos/*category", PageParam(), PhotoCategoryHandler)
+		v1.GET("/photo/:id", PhotoHandler)
+		v1.GET("/rebuild-index", ReindexHandler)
+	}
 
-	r.GET("/rebuild_index", func(c *gin.Context) {
-		if runningIndex {
-			c.JSON(200, gin.H{"message": "Reindex already running", "status": 200})
-		} else {
-			runningIndex = true
-			go reindex()
-			c.JSON(200, gin.H{"message": "Started reindex", "status": 200})
-		}
-	})
+	r.GET("/", HomeHandler)
+	// r.GET("/login", LoginHandler)
 
 	r.Run(":" + os.Getenv("PORT"))
-}
-
-func reindex() {
-	RebuildIndex(db, "/Users/jais/Pictures/Data", ".", false, false)
-	fmt.Println("Reindexed data")
-	runningIndex = false
 }
