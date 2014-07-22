@@ -1,0 +1,4 @@
+github.com/gin-gonic/gin #c3abaf9afcd167475951249d5a406ba10b24a1d9
+github.com/jinzhu/gorm #b78645279c4b86508e281d40da52f4858bb997a5
+github.com/mattn/go-sqlite3 #9ac94b6fbfda6f25be5e3c17073aeed6de10428a
+github.com/hawx/img/exif #63f07f082424649aa90c8e0f30c847f9df656314
