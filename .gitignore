@@ -1,6 +1,7 @@
-.vendor
+.vendor/
 public/system
 gin-bin
+config.yaml
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

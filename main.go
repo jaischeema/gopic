@@ -1,26 +1,26 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"os"
+	"github.com/shaoshing/train"
+	"github.com/zenazn/goji"
+	"net/http"
 )
 
 var db = SetupDatabase()
+var config = ParseConfig()
 
 func main() {
 
-	r := gin.Default()
+	goji.Get("/api/photos/:page", PhotosHandler)
+	goji.Get("/api/photos/:category/:page", PhotoCategoryHandler)
+	goji.Get("/api/photo/:id", PhotoHandler)
+	goji.Get("/api/rebuild-index", ReindexHandler)
 
-	v1 := r.Group("/api")
-	{
-		v1.GET("/photos", PageParam(), PhotosHandler)
-		v1.GET("/photos/*category", PageParam(), PhotoCategoryHandler)
-		v1.GET("/photo/:id", PhotoHandler)
-		v1.GET("/rebuild-index", ReindexHandler)
-	}
+	train.Config.Verbose = true
+	train.ConfigureHttpHandler(nil)
 
-	r.GET("/", HomeHandler)
-	// r.GET("/login", LoginHandler)
+	goji.Serve()
+}
 
-	r.Run(":" + os.Getenv("PORT"))
+func PhotoCategoryHandler(w http.ResponseWriter, r *http.Request) {
 }

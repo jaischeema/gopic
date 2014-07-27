@@ -1,85 +1,68 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/zenazn/goji/web"
+	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
+	// "strings"
 )
 
 const perPage = 10
 
 var categoryRegex = regexp.MustCompile(`^(\d{4})(?:\/(\d{1,2})(?:\/(\d{1,2}))?)?$`)
 
-/*************************************** Middleware ******************************/
-func PageParam() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		err := c.Request.ParseForm()
-		CheckError(err, "Error occured while parsing form")
-		var page int
-		pageParams := c.Request.Form["page"]
-		if len(pageParams) > 0 {
-			var err error
-			page, err = strconv.Atoi(pageParams[0])
-			if err != nil {
-				page = 0
-			}
-		} else {
-			page = 0
-		}
-		c.Set("page", page)
-		c.Next()
-	}
-}
-
 /*************************************** Handlers *******************************/
-var PhotosHandler = func(c *gin.Context) {
-	page := c.MustGet("page").(int)
+var PhotosHandler = func(context web.C, writer http.ResponseWriter, request *http.Request) {
+	page, err := strconv.Atoi(context.URLParams["page"])
+	CheckError(err, "Invalid page param")
 	photos := LoadPhotos(db, page*perPage, perPage)
-	c.JSON(200, gin.H{"photos": photos, "status": 200})
+	writeJSONResponse(map[string]interface{}{"photos": photos}, writer)
 }
 
-var PhotoHandler = func(c *gin.Context) {
-	idString := c.Params.ByName("id")
-	id, err := strconv.Atoi(idString)
+func writeJSONResponse(response map[string]interface{}, writer http.ResponseWriter) {
+	writer.Header().Set("Content-Type", "application/json")
+	responseString, _ := json.Marshal(response)
+	fmt.Fprintf(writer, string(responseString))
+}
+
+var PhotoHandler = func(context web.C, writer http.ResponseWriter, request *http.Request) {
+	photoId, err := strconv.Atoi(context.URLParams["id"])
 	CheckError(err, "Invalid ID")
 	var photo Photo
-	db.First(&photo, id)
-	c.JSON(200, gin.H{"photo": photo, "status": 200})
+	db.First(&photo, photoId)
+	writeJSONResponse(map[string]interface{}{"photo": photo}, writer)
 }
 
-var HomeHandler = func(c *gin.Context) {
-	c.JSON(200, gin.H{"message": "homepage", "status": 200})
-}
-
-var PhotoCategoryHandler = func(c *gin.Context) {
-	page := c.MustGet("page").(int)
-	category := c.Params.ByName("category")
-	category = strings.TrimLeft(category, "/")
-	category = strings.TrimRight(category, "/")
-	matches := categoryRegex.FindAllStringSubmatch(category, -1)
-	if matches != nil {
-		fmt.Println(matches)
-		photos := LoadPhotos(db, page*perPage, perPage)
-		c.JSON(200, gin.H{"photos": photos, "status": 200})
-	} else {
-		c.JSON(400, gin.H{"message": "Invalid category", "status": 400})
-	}
-}
-
+// var PhotoCategoryHandler = func(c *gin.Context) {
+// 	page := c.MustGet("page").(int)
+// 	category := c.Params.ByName("category")
+// 	category = strings.TrimLeft(category, "/")
+// 	category = strings.TrimRight(category, "/")
+// 	matches := categoryRegex.FindAllStringSubmatch(category, -1)
+// 	if matches != nil {
+// 		fmt.Println(matches)
+// 		photos := LoadPhotos(db, page*perPage, perPage)
+// 		c.JSON(200, gin.H{"photos": photos, "status": 200})
+// 	} else {
+// 		c.JSON(400, gin.H{"message": "Invalid category", "status": 400})
+// 	}
+// }
+//
 var runningIndex bool = false
-var ReindexHandler = func(c *gin.Context) {
+var ReindexHandler = func(context web.C, writer http.ResponseWriter, request *http.Request) {
 	if runningIndex {
-		c.JSON(200, gin.H{"message": "Reindex already running", "status": 200})
+		writeJSONResponse(map[string]interface{}{"message": "Reindex already running"}, writer)
 	} else {
 		runningIndex = true
 		go reindexWithCompletion()
-		c.JSON(200, gin.H{"message": "Started reindex", "status": 200})
+		writeJSONResponse(map[string]interface{}{"message": "Reindex started"}, writer)
 	}
 }
 
 func reindexWithCompletion() {
-	RebuildIndex(db, "/Users/jais/Pictures/Data", ".", false, false)
+	RebuildIndex(db, config.Get("rootPhotoDirectory"), ".", false, false)
 	runningIndex = false
 }
