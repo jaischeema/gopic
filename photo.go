@@ -19,13 +19,15 @@ const DateFormat = "2006:01:02 15:04:05-07:00"
 var ValidExts = []string{".jpg", ".png", ".tiff", ".avi"}
 
 type Photo struct {
-	Id               int64
-	Name             string
-	Path             string
-	Height           int
-	Width            int
-	ModificationTime time.Time
-	Md5hash          string
+	Id               int64     `json:"id"`
+	Name             string    `json:"name"`
+	Path             string    `json:"-"`
+	Height           int       `json:"height"`
+	Width            int       `json:"width"`
+	ModificationTime time.Time `json:"modification_time"`
+	Md5hash          string    `json:"-"`
+	Poster           string    `json:"poster,omitempty" sql:"-"`
+	Thumbnail        string    `json:"thumbnail,omitempty" sql:"-"`
 }
 
 func (p *Photo) SortedPath(root string) string {

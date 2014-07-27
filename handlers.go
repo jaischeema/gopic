@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/zenazn/goji/web"
+	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -15,17 +16,20 @@ const perPage = 10
 var categoryRegex = regexp.MustCompile(`^(\d{4})(?:\/(\d{1,2})(?:\/(\d{1,2}))?)?$`)
 
 /*************************************** Handlers *******************************/
-var PhotosHandler = func(context web.C, writer http.ResponseWriter, request *http.Request) {
-	page, err := strconv.Atoi(context.URLParams["page"])
-	CheckError(err, "Invalid page param")
-	photos := LoadPhotos(db, page*perPage, perPage)
-	writeJSONResponse(map[string]interface{}{"photos": photos}, writer)
-}
-
 func writeJSONResponse(response map[string]interface{}, writer http.ResponseWriter) {
 	writer.Header().Set("Content-Type", "application/json")
 	responseString, _ := json.Marshal(response)
 	fmt.Fprintf(writer, string(responseString))
+}
+
+var PhotosHandler = func(context web.C, writer http.ResponseWriter, request *http.Request) {
+	var count int
+	db.Table("photo").Count(&count)
+	page, err := strconv.Atoi(context.URLParams["page"])
+	CheckError(err, "Invalid page param")
+	photos := LoadPhotos(db, (page-1)*perPage, perPage)
+	totalPages := math.Ceil(float64(count) / float64(perPage))
+	writeJSONResponse(map[string]interface{}{"photos": photos, "count": count, "page": page, "total_pages": totalPages}, writer)
 }
 
 var PhotoHandler = func(context web.C, writer http.ResponseWriter, request *http.Request) {
@@ -33,6 +37,8 @@ var PhotoHandler = func(context web.C, writer http.ResponseWriter, request *http
 	CheckError(err, "Invalid ID")
 	var photo Photo
 	db.First(&photo, photoId)
+	photo.Thumbnail = "/images/2-thumbnail.png"
+	photo.Poster = "/images/2-poster.png"
 	writeJSONResponse(map[string]interface{}{"photo": photo}, writer)
 }
 
