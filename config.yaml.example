@@ -1,0 +1,8 @@
+development:
+  databaseURL: "user=jais dbname=pictor_dev sslmode=disable"
+  rootPhotoDirectory: "/Users/jais/Desktop/Pictures"
+  database: postgres
+production:
+  databaseURL: "user=pictor dbname=pictor_dev sslmode=disable"
+  rootPhotoDirectory: "/Users/jais/photos"
+  database: postgres
